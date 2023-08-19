@@ -8,12 +8,15 @@ datasource db {
 }
 
 model Book {
-    id          Int      @id @default(autoincrement())
-    title       String
+    id          String      @id @default(cuid())
+    title       String      @unique
     description String
-    bookUrl    String
+    imageUrl     String
     price       Float
     discount    Float?
+
+    category    BooksOnCategory[]
+
     created_at  DateTime @default(now())
     updated_at  DateTime @updatedAt()
 
@@ -22,11 +25,21 @@ model Book {
 }
 
 model Category {
-    id          Int      @id @default(autoincrement())
+    id          String      @id @default(cuid())
     name        String
     created_at  DateTime @default(now())
     updated_at  DateTime @updatedAt()
 
+    books       BooksOnCategory[]
+
     @@index([created_at])
     @@map("category")
+}
+
+model BooksOnCategory {
+  book Book @relation(fields: [bookId], references: [id])
+  bookId String 
+  category Category @relation(fields: [categoryId], references: [id])
+  categoryId String 
+  @@id([bookId, categoryId])
 }
