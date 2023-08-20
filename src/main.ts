@@ -1,11 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { MicroserviceOptions } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { RequestMethod } from '@nestjs/common';
+import config from './common/config';
+import { KFK_CLIENTS, KFK_GROUPS } from './common/utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: true });
+  app.enableShutdownHooks();
+
+  console.log(KFK_GROUPS.BOOK_GROUP);
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.KAFKA,
+    options: {
+      consumer: {
+        groupId: KFK_GROUPS.BOOK_GROUP,
+        allowAutoTopicCreation: true,
+      },
+      subscribe: { fromBeginning: true },
+      client: {
+        brokers: config.kafka.brokers,
+        clientId: KFK_CLIENTS.BOOK_CLIENT,
+      }
+    }
+  })
 
   const swagConfig = new DocumentBuilder()
     .setTitle('Book service Api')
@@ -26,6 +48,17 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, swagConfig),
   );
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT);
+  app.startAllMicroservices();
 }
-bootstrap();
+
+bootstrap().then(() => {
+  Logger.log(`
+      ------------
+      Server Application Started!
+      API V1: ${config.baseUrl}/
+      API Docs: ${config.baseUrl}/docs
+      Microservice Started Successfully
+      ------------
+`);
+});
