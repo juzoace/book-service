@@ -12,8 +12,6 @@ async function bootstrap() {
   app.enableCors({ origin: true });
   app.enableShutdownHooks();
 
-  console.log(KFK_GROUPS.BOOK_GROUP);
-
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
