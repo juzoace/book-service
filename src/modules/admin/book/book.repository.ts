@@ -16,12 +16,12 @@ export class BooksRepository {
             price: bookData.price,
             discount: bookData.discount,
           }));
-      
+          
           const createdBooks = await this.prisma.book.createMany({
             data: booksToCreate,
             skipDuplicates: true,
           });
-      
+          
           return createdBooks;
     } catch(error) {
         // Log error for error
